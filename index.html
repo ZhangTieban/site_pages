@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -134,10 +134,10 @@
           <section class="card section-card">
             <div class="section-heading">
               <div><h2>2. 清除與燒錄</h2></div>
-              <p>如果要完整覆蓋，可先清除 Flash；一般更新也可以直接開始燒錄。</p>
+              <p>授權板更新請直接開始燒錄，避免清除授權資料。</p>
             </div>
             <div class="action-row">
-              <button class="btn btn-danger" id="eraseBtn" type="button" disabled>清除 Flash</button>
+              <button class="btn btn-danger" id="eraseBtn" type="button" disabled>清除已停用</button>
               <button class="btn btn-cool" id="flashBtn" type="button" disabled>開始燒錄</button>
             </div>
             <div class="progress-wrap" id="progressWrap">
@@ -181,9 +181,9 @@
       return;
     }
 
-    const FLASHER_BUILD = '2026-04-09 19:45';
+    const FLASHER_BUILD = '2026-05-24 22:55';
     const MODELS = {
-      amoled206: { name: 'ESP32-S3-Touch-AMOLED-2.06', file: 'firmware/ESP32-S3-Touch-AMOLED-2.06.bin', description: '2.06 吋 AMOLED 主力版本', flashSize: '32MB', flashMode: 'dio', flashFreq: '80m' }
+      amoled206: { name: 'ESP32-S3-Touch-AMOLED-2.06', file: 'firmware/ESP32-S3-Touch-AMOLED-2.06.bin', description: '2.06 吋 AMOLED 主力版本', flashSize: '32MB', flashMode: 'dio', flashFreq: '80m', flashAddress: 0x10000 }
     };
 
     const $ = id => document.getElementById(id);
@@ -327,7 +327,7 @@
         deviceInfo.classList.add('show');
         connectBtn.style.display = 'none';
         disconnectBtn.style.display = 'inline-flex';
-        eraseBtn.disabled = false;
+        eraseBtn.disabled = true;
         flashBtn.disabled = false;
         isConnected = true;
         log(`裝置連接成功：${chip}`, '#79f7aa');
@@ -383,7 +383,7 @@
         showStatus('error', `清除失敗：${error.message}`);
       } finally {
         isBusy = false;
-        eraseBtn.disabled = false;
+        eraseBtn.disabled = true;
         flashBtn.disabled = false;
       }
     });
@@ -412,7 +412,7 @@
         log(`韌體讀取完成，大小 ${sizeMB} MB`, '#79f7aa');
         log(`韌體資料格式：BinaryString`, '#8bc2ff');
         const flashOptions = {
-          fileArray: [{ data: firmwareData, address: 0x0 }],
+          fileArray: [{ data: firmwareData, address: selectedModel.flashAddress }],
           flashSize: 'keep',
           flashMode: 'keep',
           flashFreq: 'keep',
@@ -424,7 +424,7 @@
             progressText.innerHTML = `燒錄中... <span>${percent}%</span> (${(written / 1024).toFixed(0)}/${(total / 1024).toFixed(0)} KB)`;
           }
         };
-        log('開始燒錄韌體...', '#ffd267');
+        log(`開始燒錄韌體到 0x${selectedModel.flashAddress.toString(16).toUpperCase()}...`, '#ffd267');
         await esploader.writeFlash(flashOptions);
         progressFill.style.width = '100%';
         progressText.innerHTML = '燒錄完成 <span>100%</span>';
@@ -438,7 +438,7 @@
       } finally {
         isBusy = false;
         flashBtn.disabled = false;
-        eraseBtn.disabled = false;
+        eraseBtn.disabled = true;
         disconnectBtn.disabled = false;
       }
     });
